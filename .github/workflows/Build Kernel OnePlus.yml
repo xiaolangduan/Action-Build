@@ -1000,21 +1000,6 @@ jobs:
           CONFIG_FILE=./arch/arm64/configs/gki_defconfig
           MAKEFILE=./kernel/Makefile
 
-          # 上游遗漏修复: SukiSU-Ultra builtin 内核代码(2026-10)无条件调用 susfs priority uid filter 函数,
-          # 但其 Kconfig 未定义对应选项, 导致 CONFIG_KSU_SUSFS_PRIORITY_UID_FILTER 无法开启, 编译报 implicit declaration。
-          # 此处补齐 Kconfig 定义(与 susfs4ksu KernelSU/10_enable 补丁保持一致)。
-          KSU_KCONFIG=./drivers/kernelsu/Kconfig
-          if [ "${{ github.event.inputs.SUSFS_META }}" != "-1" ] && [ -f "$KSU_KCONFIG" ] && ! grep -q "KSU_SUSFS_PRIORITY_UID_FILTER" "$KSU_KCONFIG"; then
-            {
-              printf '\nconfig KSU_SUSFS_PRIORITY_UID_FILTER\n'
-              printf '\tbool "Enable to allow adding user-defined uids that will be hidden from getpriority/setpriority/ioprio_get/ioprio_set syscall"\n'
-              printf '\tdepends on KSU_SUSFS\n'
-              printf '\tdefault y\n'
-              printf '\thelp\n'
-              printf '\t  - Allow hiding user-defined uids from getpriority/setpriority/ioprio_get/ioprio_set syscall.\n'
-            } >> "$KSU_KCONFIG"
-          fi
-
           declare -a HIDE_CONFIGS=()
 
           set_config() {
@@ -1076,7 +1061,6 @@ jobs:
             set_config "CONFIG_KSU_SUSFS_HIDE_KSU_SUSFS_SYMBOLS=y"
             set_config "CONFIG_KSU_SUSFS_SPOOF_CMDLINE_OR_BOOTCONFIG=y"
             set_config "CONFIG_KSU_SUSFS_OPEN_REDIRECT=y"
-            set_config "CONFIG_KSU_SUSFS_PRIORITY_UID_FILTER=y"
           else
             set_config "CONFIG_KSU_SUSFS=n"
           fi
